@@ -6,7 +6,7 @@
   <arg name="estimate_mode"  default= "1" />
   <arg name="sim_estimate_mode"  default= "2" />
   <arg name="headless" default="True" />
-  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty.world" />
+  <arg name="worldtype" default="$(find assemble_quadrotors)/gazebo_model/world/test.world" />
   <arg name="launch_gazebo" default="True" />
   <arg name="direct_model" default="False" />
   <arg name="direct_model_name" />
@@ -36,19 +36,19 @@
 
     # Drone = 0
     <param name="uav_model" value= "0" />
-    <rosparam file="$(arg config_dir)/AssembleRobotModel.yaml" command="load"/>
-    <!-- <rosparam file="$(arg config_dir)/RobotModelFullyActuated.yaml" command="load"/> -->
+    <!-- <rosparam file="$(arg config_dir)/AssembleRobotModel.yaml" command="load"/> -->
+    <rosparam file="$(arg config_dir)/RobotModelUnderActuated.yaml" command="load"/>
 
     ###########  Motor Config  ###########
-    <!-- <rosparam file="$(arg config_dir)/MotorInfo_5inch.yaml" command="load" /> -->
-    <rosparam file="$(arg config_dir)/AssembleMotorInfo_5inch.yaml" command="load" />
+    <rosparam file="$(arg config_dir)/MotorInfo_5inch.yaml" command="load" />
+    <!-- <rosparam file="$(arg config_dir)/AssembleMotorInfo_5inch.yaml" command="load" /> -->
 
     ###########  Battery Config  ###########
     <rosparam file="$(arg config_dir)/Battery.yaml" command="load" />
 
     ###########  Control  ###########
-    <rosparam file="$(arg config_dir)/AssembleControl.yaml" command="load"/>
-    <!-- <rosparam file="$(arg config_dir)/FlightControlFullyActuated.yaml" command="load"/> -->
+    <!-- <rosparam file="$(arg config_dir)/AssembleControl.yaml" command="load"/> -->
+    <rosparam file="$(arg config_dir)/FlightControlUnderActuated_tilt_male.yaml" command="load"/>
 
     ###########  Sensor Fusion  ###########
     <rosparam file="$(arg config_dir)/StateEstimation.yaml" command="load" />

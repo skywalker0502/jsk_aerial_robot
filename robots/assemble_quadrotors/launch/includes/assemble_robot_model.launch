@@ -1,6 +1,6 @@
 <launch>
   <arg name="headless" default="false" />
-  <arg name="need_joint_state" default="false"/>
+  <arg name="need_joint_state" default="true"/>
   <arg name="model_options" default=""/>
   <arg name="assemble_robot_model" />
   <arg name="dessemble_robot_model" />
@@ -16,7 +16,7 @@
     <!--airframe-->
     <param name="airframe" value="$(arg airframe)"/>
     <!-- normal state -->
-    <param name="robot_description" command="$(find xacro)/xacro '$(arg assemble_robot_model)' robot_name:=$(arg robot_ns)  $(arg model_options)" />
+    <param name="robot_description" command="$(find xacro)/xacro '$(arg dessemble_robot_model)' robot_name:=$(arg robot_ns)  $(arg model_options)" />
     <!-- assemble state -->
     <param name="assemble_robot" command="$(find xacro)/xacro '$(arg assemble_robot_model)' robot_name:=$(arg robot_ns)  $(arg model_options)" />
     <!-- dessemble state -->

@@ -3,6 +3,7 @@ project(mini_quadrotor)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
+  livox_ros_driver2
   )
 
 catkin_package(

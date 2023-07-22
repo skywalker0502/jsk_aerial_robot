@@ -42,7 +42,7 @@ public:
         // ROS_INFO("OK");
       }
     }
-    
+    //ROS_INFO("max theta is : %f", max_theta);
     for(int i=0; i < livox_msg->points.size(); i++){
       float position_x = livox_msg->points.at(i).x;
       float position_y = livox_msg->points.at(i).y;
@@ -52,8 +52,9 @@ public:
         min_pos_z = position_z;
       }
     }
+    
     ROS_INFO("min_pos_z: %f",min_pos_z);
-
+    
     std_msgs::Float32 dist_msg;
     dist_msg.data = min_pos_z;
     pub_.publish(dist_msg);

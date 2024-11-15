@@ -8,7 +8,7 @@ from std_msgs.msg import Empty, String, Bool
 from aerial_robot_msgs.msg import FlightNav
 from spinal.msg import ServoControlCmd
 from diagnostic_msgs.msg import KeyValue
-from beetle.kondo_control import KondoControl
+from beetle.kondo_control_api import KondoControl
 import numpy as np
 import tf
 

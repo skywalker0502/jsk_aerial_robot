@@ -147,7 +147,9 @@ class SeparateState(smach.State):
 #### main class ####
 class DisassembleDemo():
     def __init__(self):
-        rospy.init_node("disassemble_demo")
+        # rospy.init_node("disassemble_demo")
+        if not rospy.core.is_initialized():  # 检查是否已初始化
+            rospy.init_node("disassemble_demo")
 
     def main(self):
         sm_top = smach.StateMachine(outcomes=['succeeded'])
@@ -159,8 +161,13 @@ class DisassembleDemo():
         sis = smach_ros.IntrospectionServer('smach_server', sm_top, '/SM_ROOT')
         sis.start()
         outcome = sm_top.execute()
-        rospy.spin()
-        sis.stop()
+        # rospy.spin()
+        # sis.stop()
+        # 保持ROS节点运行
+        while not rospy.is_shutdown() and outcome not in ['succeeded', 'interupted']:
+            rospy.sleep(0.1)  
+            sis.stop()
+            return outcome  
 
 if __name__ == '__main__':
     try:

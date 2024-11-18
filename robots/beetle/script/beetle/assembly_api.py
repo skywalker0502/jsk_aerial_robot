@@ -493,7 +493,8 @@ class AssemblyState(smach.State):
 #### main class ####
 class AssembleDemo():
     def __init__(self):
-        rospy.init_node("assemble_demo")
+        if not rospy.core.is_initialized():  # 检查是否已初始化
+            rospy.init_node("assemble_demo")
 
     def main(self):
         sm_top = smach.StateMachine(outcomes=['succeeded','interupted'])
@@ -505,8 +506,13 @@ class AssembleDemo():
         sis = smach_ros.IntrospectionServer('smach_server', sm_top, '/SM_ROOT')
         sis.start()
         outcome = sm_top.execute()
-        rospy.spin()
-        sis.stop()
+        # rospy.spin()
+        # sis.stop()
+        # 保持ROS节点运行
+        while not rospy.is_shutdown() and outcome not in ['succeeded', 'interupted']:
+            rospy.sleep(0.1)  
+            sis.stop()
+            return outcome  
 
 if __name__ == '__main__':
     try:

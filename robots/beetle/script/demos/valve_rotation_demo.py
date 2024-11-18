@@ -47,10 +47,10 @@ class valverotationDemo():
             pos_assembly = FlightNav()
             pos_assembly.target=1
             pos_assembly.pos_xy_nav_mode = 2
-            pos_assembly.target_pos_x = 5.5
+            pos_assembly.target_pos_x = 4.5
             # pos_assembly.target_vel_x = 0.1
             self.pos_assembly_pub.publish(pos_assembly)
-            time.sleep(4)
+            time.sleep(5)
             rospy.loginfo("Reaching the entrance, moving to next step.")
             self.flag = 2
         # Step 2: Disassemble to pass the path
@@ -68,22 +68,22 @@ class valverotationDemo():
             pos_beetle_1 = FlightNav()
             pos_beetle_1.pos_xy_nav_mode = 2
             pos_beetle_1.target_pos_x = 7.0
-            pos_beetle_1.target_pos_y = 0.85
+            pos_beetle_1.target_pos_y = 0.7
             pos_beetle_2 = FlightNav()
             pos_beetle_2.pos_xy_nav_mode = 2
             pos_beetle_2.target_pos_x = 7.0
-            pos_beetle_2.target_pos_y = -0.8      
+            pos_beetle_2.target_pos_y = -0.7      
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(10)
             pos_beetle_1.pos_xy_nav_mode = 2
-            pos_beetle_1.target_pos_x = 13.2
-            pos_beetle_1.target_pos_y = 0.85
+            pos_beetle_1.target_pos_x = 13.4
+            pos_beetle_1.target_pos_y = 0.7
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             # time.sleep(3)
             pos_beetle_2.pos_xy_nav_mode = 2
             pos_beetle_2.target_pos_x = 13.4
-            pos_beetle_2.target_pos_y = -0.8
+            pos_beetle_2.target_pos_y = -0.7
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(26)
             self.flag = 4

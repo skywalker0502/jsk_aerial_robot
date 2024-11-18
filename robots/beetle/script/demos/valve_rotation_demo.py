@@ -47,10 +47,10 @@ class valverotationDemo():
             pos_assembly = FlightNav()
             pos_assembly.target=1
             pos_assembly.pos_xy_nav_mode = 2
-            pos_assembly.target_pos_x = 4.5
+            pos_assembly.target_pos_x = 4.9
             # pos_assembly.target_vel_x = 0.1
             self.pos_assembly_pub.publish(pos_assembly)
-            time.sleep(5)
+            time.sleep(7)
             rospy.loginfo("Reaching the entrance, moving to next step.")
             self.flag = 2
         # Step 2: Disassemble to pass the path
@@ -91,23 +91,23 @@ class valverotationDemo():
         # Step 4: Assembly under the valve
         if self.flag == 4:
             try:
-                pos_beetle_1.target_pos_y = 0.0
-                pos_beetle_1.target_pos_x = 14.7
-                # pos_beetle_2.target_pos_x = 14.5
                 pos_beetle_2.target_pos_y = 0.0
+                pos_beetle_2.target_pos_x = 14.5
+                # pos_beetle_2.target_pos_x = 14.5
+                pos_beetle_1.target_pos_y = 0.0
                 self.pos_beetle_1_pub.publish(pos_beetle_1)
                 self.pos_beetle_2_pub.publish(pos_beetle_2)
                 time.sleep(7)
                 # demo_assemble = AssemblyDemo(module_ids = "1,2", real_machine=False)
                 demo_assemble = AssembleDemo();
-                demo_assemble.main()
-                time.sleep(15)
+                outcome=demo_assemble.main()
+                time.sleep(1)
                 self.flag = 5
             except rospy.ROSInterruptException:
                 pass
             rospy.loginfo("Assemble under the valve, moving to next step.")
         # Step 5: Excuting the valve rotation task
-        while self.flag == 5:
+        if self.flag == 5:
             pos_assembly = FlightNav()
             pos_assembly.target=1
             pos_assembly.pos_z_nav_mode = 2

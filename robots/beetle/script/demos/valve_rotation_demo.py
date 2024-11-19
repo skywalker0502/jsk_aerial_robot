@@ -23,7 +23,7 @@ class valverotationDemo():
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/uav/nav", FlightNav, queue_size=10)
         self.pos_beetle_2_pub = rospy.Publisher("/beetle2/uav/nav", FlightNav, queue_size=10)
         self.pos_assembly_pub = rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=10)
-        self.rotation_pub = rospy.Publisher("/target_com_rot", DesireCoord, queue_size=10)
+        self.rotation_pub = rospy.Publisher("/assembled/final_target_baselink_rot", DesireCoord, queue_size=10)
         self.pos_beetle_1_sub = rospy.Subscriber("/beetle1/mocap/pose", PoseStamped, queue_size=10)
         self.pos_beetle_2_sub = rospy.Subscriber("/beetle2/mocap/pose", PoseStamped, queue_size=10)
         self.flag = 0
@@ -68,22 +68,21 @@ class valverotationDemo():
             pos_beetle_1 = FlightNav()
             pos_beetle_1.pos_xy_nav_mode = 2
             pos_beetle_1.target_pos_x = 7.0
-            pos_beetle_1.target_pos_y = 0.7
+            pos_beetle_1.target_pos_y = 0.71
             pos_beetle_2 = FlightNav()
             pos_beetle_2.pos_xy_nav_mode = 2
             pos_beetle_2.target_pos_x = 7.0
-            pos_beetle_2.target_pos_y = -0.7      
+            pos_beetle_2.target_pos_y = -0.73      
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             self.pos_beetle_2_pub.publish(pos_beetle_2)
-            time.sleep(10)
+            time.sleep(15)
             pos_beetle_1.pos_xy_nav_mode = 2
             pos_beetle_1.target_pos_x = 13.4
-            pos_beetle_1.target_pos_y = 0.7
+            pos_beetle_1.target_pos_y = 0.71
             self.pos_beetle_1_pub.publish(pos_beetle_1)
-            # time.sleep(3)
             pos_beetle_2.pos_xy_nav_mode = 2
             pos_beetle_2.target_pos_x = 13.4
-            pos_beetle_2.target_pos_y = -0.7
+            pos_beetle_2.target_pos_y = -0.73
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(26)
             self.flag = 4
@@ -111,31 +110,47 @@ class valverotationDemo():
             pos_assembly = FlightNav()
             pos_assembly.target=1
             pos_assembly.pos_z_nav_mode = 2
-            pos_assembly.target_pos_z = 1.2
+            pos_assembly.target_pos_z = 1.4
             rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=10).publish(pos_assembly)
-            time.sleep(5)
-            rotation_assembly = DesireCoord()
-            rotation_assembly.yaw = 1.57
-            self.rotation_pub.publish(rotation_assembly)
-            time.sleep(3)
+            time.sleep(6)
+            pos_assembly.yaw_nav_mode = 2
+            pos_assembly.target_yaw = 3.1415
+            self.pos_assembly_pub.publish(pos_assembly)
+            time.sleep(10)
             rospy.loginfo("The valve rotation task is completed! Moving to next step.")
+            pos_assembly.target_pos_z = 1.0
+            self.pos_assembly_pub.publish(pos_assembly)
+            time.sleep(10)
             self.flag = 6
         # Step 6: Disassemble to pass the path
         if self.flag == 6:
             try:
                 demo_disassemble.main()
-                time.sleep(0.1)
+                time.sleep(1)
                 rospy.loginfo("Disassemble at the opposite, moving to next step.")
-                self.flag = 7
+
             except rospy.ROSInterruptException: pass
+            pos_beetle_2.target_pos_y = -0.4
+            pos_beetle_1.target_pos_y = 0.4
+            pos_beetle_2.target_pos_x = 17.5
+            pos_beetle_1.target_pos_x = 17.5
+            self.pos_beetle_1_pub.publish(pos_beetle_1)
+            self.pos_beetle_2_pub.publish(pos_beetle_2)
+            time.sleep(7)
+            pos_beetle_2.target_pos_y = -0.71
+            pos_beetle_1.target_pos_y = 0.72
+            self.pos_beetle_1_pub.publish(pos_beetle_1)
+            self.pos_beetle_2_pub.publish(pos_beetle_2)
+            time.sleep(7)
+            self.flag = 7
         # Step 7: Moving to the opposite gate
         while self.flag == 7:
             pos_beetle_1.pos_xy_nav_mode = 2
-            pos_beetle_1.target_pos_x = 30.0
-            pos_beetle_1.target_pos_y = 0.80
+            pos_beetle_1.target_pos_x = 25.0
+            pos_beetle_1.target_pos_y = 0.72
             pos_beetle_2.pos_xy_nav_mode = 2
-            pos_beetle_2.target_pos_x = 30.0
-            pos_beetle_2.target_pos_y = -0.80           
+            pos_beetle_2.target_pos_x = 25.0
+            pos_beetle_2.target_pos_y = -0.71           
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(20)

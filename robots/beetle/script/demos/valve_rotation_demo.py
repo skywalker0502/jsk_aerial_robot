@@ -64,7 +64,7 @@ class valverotationDemo():
                 rospy.loginfo("Disassemble at the entrance, moving to next step.")
         except rospy.ROSInterruptException: pass
         # Step 3: Moving to the valve
-        while self.flag == 3:
+        if self.flag == 3:
             pos_beetle_1 = FlightNav()
             pos_beetle_1.pos_xy_nav_mode = 2
             pos_beetle_1.target_pos_x = 7.0
@@ -77,11 +77,11 @@ class valverotationDemo():
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(15)
             pos_beetle_1.pos_xy_nav_mode = 2
-            pos_beetle_1.target_pos_x = 13.4
+            pos_beetle_1.target_pos_x = 13.7
             pos_beetle_1.target_pos_y = 0.71
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             pos_beetle_2.pos_xy_nav_mode = 2
-            pos_beetle_2.target_pos_x = 13.4
+            pos_beetle_2.target_pos_x = 13.7
             pos_beetle_2.target_pos_y = -0.73
             self.pos_beetle_2_pub.publish(pos_beetle_2)
             time.sleep(26)
@@ -91,7 +91,7 @@ class valverotationDemo():
         if self.flag == 4:
             try:
                 pos_beetle_2.target_pos_y = 0.0
-                pos_beetle_2.target_pos_x = 14.5
+                pos_beetle_2.target_pos_x = 14.8
                 # pos_beetle_2.target_pos_x = 14.5
                 pos_beetle_1.target_pos_y = 0.0
                 self.pos_beetle_1_pub.publish(pos_beetle_1)
@@ -141,10 +141,10 @@ class valverotationDemo():
             pos_beetle_1.target_pos_y = 0.72
             self.pos_beetle_1_pub.publish(pos_beetle_1)
             self.pos_beetle_2_pub.publish(pos_beetle_2)
-            time.sleep(7)
+            time.sleep(10)
             self.flag = 7
         # Step 7: Moving to the opposite gate
-        while self.flag == 7:
+        if self.flag == 7:
             pos_beetle_1.pos_xy_nav_mode = 2
             pos_beetle_1.target_pos_x = 25.0
             pos_beetle_1.target_pos_y = 0.72

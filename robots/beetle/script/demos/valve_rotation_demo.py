@@ -70,8 +70,8 @@ class valverotationDemo():
             self.pos_assembly_pub.publish(pos_assembly)
             time.sleep(7)
             rospy.loginfo("Reaching the entrance, moving to next step.")
-            # if  self.pos_beetle_2.pose.position.x > self.maze_entrace_x - 2.2:
-            self.flag = 2
+            if  self.pos_beetle_2.pose.position.x > self.maze_entrace_x - 2.2:
+                self.flag = 2
         # Step 2: Disassemble to pass the path
         try:
             if self.flag == 2:
@@ -148,7 +148,6 @@ class valverotationDemo():
                 demo_disassemble.main()
                 time.sleep(1)
                 rospy.loginfo("Disassemble at the opposite, moving to next step.")
-
             except rospy.ROSInterruptException: pass
             pos_beetle_2.target_pos_y = self.valve_pos_y-0.4
             pos_beetle_1.target_pos_y = self.valve_pos_y+0.4

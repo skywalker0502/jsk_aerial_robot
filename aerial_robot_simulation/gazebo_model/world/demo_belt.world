@@ -37,21 +37,21 @@
       <uri>model://ground_plane</uri>
     </include>
 
-    <!-- Some barriers with belt -->
+    <!-- Barrier with Belt -->
     <model name="barrier_with_belt">
-      <static>true</static> 
+      <static>true</static>
 
       <!-- Base Plate -->
       <link name="base1">
         <visual name="visual">
           <geometry>
             <cylinder>
-              <radius>0.155</radius> 
-              <length>0.04</length> 
+              <radius>0.155</radius> <!-- Diameter of 31 cm -->
+              <length>0.04</length> <!-- Thickness of 4 cm -->
             </cylinder>
           </geometry>
           <material>
-            <ambient>0.5 0.5 0.5 1</ambient> 
+            <ambient>0.5 0.5 0.5 1</ambient> <!-- Grey material -->
           </material>
         </visual>
         <collision name="collision">
@@ -62,20 +62,20 @@
             </cylinder>
           </geometry>
         </collision>
-        <pose>0 0 0 0 0 0</pose> 
+        <pose>0 0 0.02 0 0 0</pose> <!-- Center of the base -->
       </link>
 
-      <!-- pillar -->
+      <!-- Pillar -->
       <link name="cylinder1">
         <visual name="visual">
           <geometry>
             <cylinder>
-              <radius>0.05</radius> 
-              <length>0.89</length> 
+              <radius>0.05</radius> <!-- 5 cm radius -->
+              <length>0.89</length> <!-- 89 cm height -->
             </cylinder>
           </geometry>
           <material>
-            <ambient>1 0 0 1</ambient> 
+            <ambient>0.5 0.5 0.5 1</ambient> <!-- Red color -->
           </material>
         </visual>
         <collision name="collision">
@@ -86,44 +86,44 @@
             </cylinder>
           </geometry>
         </collision>
-        <pose>0 0 0 0 0 0</pose> 
+        <pose>0 0 0.46 0 0 0</pose> <!-- Pillar placed on top of the base -->
       </link>
 
-      <!-- belt -->
+      <!-- Belt -->
       <link name="tape">
         <visual name="visual">
           <geometry>
             <box>
-              <size>0.31 0.048 0.5</size> 
+              <size>0.31 0.048 0.01</size> <!-- Length, width, thickness of the belt -->
             </box>
           </geometry>
           <material>
-            <ambient>0 0 1 1</ambient> 
+            <ambient>1 0 0 1</ambient> <!-- Blue material -->
           </material>
         </visual>
         <collision name="collision">
           <geometry>
             <box>
-              <size>0.31 0.048 0.5</size>
+              <size>0.31 0.048 0.01</size>
             </box>
           </geometry>
         </collision>
-        <pose>0.155 0 0.94 0 0 0</pose> 
+        <pose>0.155 0 0.84 1.571 0 0</pose> <!-- Belt aligned with the pillar top -->
       </link>
 
-      <!-- fix pillar to base -->
+      <!-- Fix Pillar to Base -->
       <joint name="cylinder1_to_base" type="fixed">
         <parent>base1</parent>
         <child>cylinder1</child>
       </joint>
 
-      <!-- fix belt to pillar -->
+      <!-- Fix Belt to Pillar -->
       <joint name="cylinder1_to_tape" type="fixed">
         <parent>cylinder1</parent>
         <child>tape</child>
       </joint>
 
-      </model>
+    </model>
 
   </world>
 </sdf>

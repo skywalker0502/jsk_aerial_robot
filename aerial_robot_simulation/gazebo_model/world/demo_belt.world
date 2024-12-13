@@ -37,93 +37,23 @@
       <uri>model://ground_plane</uri>
     </include>
 
-    <!-- Barrier with Belt -->
-    <model name="barrier_with_belt">
-      <static>true</static>
 
-      <!-- Base Plate -->
-      <link name="base1">
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <radius>0.155</radius> <!-- Diameter of 31 cm -->
-              <length>0.04</length> <!-- Thickness of 4 cm -->
-            </cylinder>
-          </geometry>
-          <material>
-            <ambient>0.5 0.5 0.5 1</ambient> <!-- Grey material -->
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.155</radius>
-              <length>0.04</length>
-            </cylinder>
-          </geometry>
-        </collision>
-        <pose>0 0 0.02 0 0 0</pose> <!-- Center of the base -->
-      </link>
+      <!-- 加载隔离带 -->
+    <include>
+      <uri>model://barrier_with_belt_1</uri>
+      <pose>5 0 0 0 0 0</pose> <!-- 设置位置和方向 -->
+    </include>
 
-      <!-- Pillar -->
-      <link name="cylinder1">
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <radius>0.05</radius> <!-- 5 cm radius -->
-              <length>0.89</length> <!-- 89 cm height -->
-            </cylinder>
-          </geometry>
-          <material>
-            <ambient>0.5 0.5 0.5 1</ambient> <!-- Red color -->
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.05</radius>
-              <length>0.89</length>
-            </cylinder>
-          </geometry>
-        </collision>
-        <pose>0 0 0.46 0 0 0</pose> <!-- Pillar placed on top of the base -->
-      </link>
+    <include>
+      <uri>model://barrier_with_belt_2</uri>
+      <pose>0 2 0 0 0 0</pose> <!-- 设置位置和方向 -->
+    </include>
 
-      <!-- Belt -->
-      <link name="tape">
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.31 0.048 0.01</size> <!-- Length, width, thickness of the belt -->
-            </box>
-          </geometry>
-          <material>
-            <ambient>1 0 0 1</ambient> <!-- Blue material -->
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.31 0.048 0.01</size>
-            </box>
-          </geometry>
-        </collision>
-        <pose>0.155 0 0.84 1.571 0 0</pose> <!-- Belt aligned with the pillar top -->
-      </link>
-
-      <!-- Fix Pillar to Base -->
-      <joint name="cylinder1_to_base" type="fixed">
-        <parent>base1</parent>
-        <child>cylinder1</child>
-      </joint>
-
-      <!-- Fix Belt to Pillar -->
-      <joint name="cylinder1_to_tape" type="fixed">
-        <parent>cylinder1</parent>
-        <child>tape</child>
-      </joint>
-
-    </model>
+    <include>
+      <uri>model://barrier_with_belt_1_dual</uri>
+      <pose>0 0 0 0 0 0</pose> <!-- 设置位置和方向 -->
+    </include>
+ 
 
   </world>
 </sdf>

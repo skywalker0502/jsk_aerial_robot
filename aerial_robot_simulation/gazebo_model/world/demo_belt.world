@@ -38,20 +38,34 @@
     </include>
 
 
-      <!-- 加载隔离带 -->
+    <!-- A maze made of barrier with belt -->
     <include>
       <uri>model://barrier_with_belt_1</uri>
-      <pose>5 0 0 0 0 0</pose> <!-- 设置位置和方向 -->
+      <name>barrier_with_belt_1_entrance_1</name> 
+      <pose>0 0 0 0 0 0</pose> 
     </include>
 
     <include>
-      <uri>model://barrier_with_belt_2</uri>
-      <pose>0 2 0 0 0 0</pose> <!-- 设置位置和方向 -->
+      <uri>model://barrier_with_belt_1</uri>
+      <name>barrier_with_belt_1_entrance_2</name> 
+      <pose>0 1 0 0 0 0</pose> 
+    </include>
+
+    <include>
+      <uri>model://barrier_with_belt_1</uri>
+      <name>barrier_with_belt_1_entrance_3</name> 
+      <pose>0 -1 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1_dual</uri>
-      <pose>0 0 0 0 0 0</pose> <!-- 设置位置和方向 -->
+      <name>barrier_with_belt_1_middle_1</name> 
+      <pose>1 2 0 0 0 2.3562</pose> 
+    </include>
+
+    <include>
+      <uri>model://barrier_with_belt_1_dual</uri>
+      <pose>1 -2 0 0 0 0</pose> 
     </include>
  
 

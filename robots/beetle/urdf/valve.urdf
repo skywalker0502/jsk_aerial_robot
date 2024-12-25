@@ -73,7 +73,7 @@
 
   <xacro:macro name="mount_model" params="parent">
     <xacro:property name="height" value="0.05" />
-    <xacro:property name="radius" value="${valve_height * 0.5}" />
+    <xacro:property name="radius" value="${valve_height * 0.2}" />
     <xacro:property name="mass" value="20" />
 
     <joint name="${parent}_mount_joint" type="fixed">

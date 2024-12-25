@@ -7,7 +7,7 @@
   <arg name="estimate_mode"  default= "1" />
   <arg name="sim_estimate_mode"  default= "2" />
   <arg name="headless" default="True" />
-  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/simple.world" />
+  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/demo_belt.world" />
   <arg name="launch_gazebo" default="True" />
   <arg name="direct_model" default="False" />
   <arg name="direct_model_name" />
@@ -108,6 +108,6 @@
   <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 10 -y 0 -z 0 -Y 0 -param valve_urdf" /> -->
   <param name="robot_description"
   command="$(find xacro)/xacro $(find beetle)/urdf/valve.urdf no_collision:=false" />
-  <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 15 -y 0 -z 0 -Y 0 -param robot_description" />
+  <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 3 -y 0 -z 0 -Y 0 -param robot_description" />
 
 </launch>

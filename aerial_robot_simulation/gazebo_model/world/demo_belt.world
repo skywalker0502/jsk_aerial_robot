@@ -42,61 +42,61 @@
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_entrance_1</name> 
-      <pose>0 0 0 0 0 0</pose> 
+      <pose>1 0 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_entrance_2</name> 
-      <pose>0 1 0 0 0 0</pose> 
+      <pose>1 1 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_entrance_3</name> 
-      <pose>0 -1 0 0 0 0</pose> 
+      <pose>1 -1 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1_dual</uri>
       <name>barrier_with_belt_1_entrance_4</name> 
-      <pose>1 2 0 0 0 -1.5708</pose> 
+      <pose>2 2 0 0 0 -1.5708</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1_dual</uri>
       <name>barrier_with_belt_1_middle_1</name>
-      <pose>3 2 0 0 0 3.1415926</pose> 
+      <pose>4 2 0 0 0 3.1415926</pose> 
     </include>
  
      <include>
       <uri>model://barrier_with_belt_1_dual</uri>
       <name>barrier_with_belt_1_entrance_5</name>
-      <pose>1 -2 0 0 0 0</pose> 
+      <pose>2 -2 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1_dual</uri>
       <name>barrier_with_belt_1_middle_2</name>
-      <pose>3 -2 0 0 0 1.5708</pose> 
+      <pose>4 -2 0 0 0 1.5708</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_exit_1</name> 
-      <pose>3 0 0 0 0 0</pose> 
+      <pose>4 0 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_exit_2</name> 
-      <pose>3 1 0 0 0 0</pose> 
+      <pose>4 1 0 0 0 0</pose> 
     </include>
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_exit_3</name> 
-      <pose>3 -1 0 0 0 0</pose> 
+      <pose>4 -1 0 0 0 0</pose> 
     </include>
 
   </world>

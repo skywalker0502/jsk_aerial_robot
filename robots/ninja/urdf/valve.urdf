@@ -3,8 +3,7 @@
     xmlns:xacro="http://www.ros.org/wiki/xacro" name="valve" >
 
 
-  <!-- <xacro:arg name="valve_pitch_angle" default="180" /> deg -->
-  <xacro:arg name="valve_pitch_angle" default="0" /> <!-- deg -->
+  <xacro:arg name="valve_pitch_angle" default="180" /> <!-- deg -->
   <xacro:arg name="valve_friction" default="1.0" /> <!-- Nm -->
   <xacro:arg name="no_collsion" default="false" />
   <xacro:property name="valve_height" value="${0.3 + $(arg valve_pitch_angle) * 0.01}" />
@@ -74,7 +73,7 @@
 
   <xacro:macro name="mount_model" params="parent">
     <xacro:property name="height" value="0.05" />
-    <xacro:property name="radius" value="${valve_height * 0.2}" />
+    <xacro:property name="radius" value="${valve_height * 0.5}" />
     <xacro:property name="mass" value="20" />
 
     <joint name="${parent}_mount_joint" type="fixed">

@@ -3,11 +3,10 @@
     xmlns:xacro="http://www.ros.org/wiki/xacro" name="valve" >
 
 
-  <!-- <xacro:arg name="valve_pitch_angle" default="180" /> deg -->
   <xacro:arg name="valve_pitch_angle" default="0" /> <!-- deg -->
   <xacro:arg name="valve_friction" default="1.0" /> <!-- Nm -->
   <xacro:arg name="no_collsion" default="false" />
-  <xacro:property name="valve_height" value="${0.3 + $(arg valve_pitch_angle) * 0.01}" />
+  <xacro:property name="valve_height" value="${0.43 + $(arg valve_pitch_angle) * 0.001}" />
 <!-- 2024/10/25 -->
   <!-- <xacro:property name="pi" value="3.141592653589793" />  -->
 
@@ -52,15 +51,7 @@
             iyy="${0.25 * mass * radius * radius}" iyz="0.0"
             izz="${0.5 * mass * radius * radius}"/>
       </inertial>
-    </link>
-  </xacro:macro>
-
-  <xacro:pipe_model name="main_pipe" mass="${main_pipe_mass}" length="${main_pipe_length}" radius="0.05" height="${valve_height}" direction="${pi/2}" />
-  <xacro:pipe_model name="sub_pipe1" mass="${main_pipe_mass * main_pipe_length * valve_height}" length="${valve_height}" height="${valve_height/2}" radius="${pipe_radius}"  direction="0" />
-  <xacro:pipe_model name="sub_pipe2" mass="${main_pipe_mass * main_pipe_length * valve_height}" length="${valve_height}" height="${valve_height/2}" radius="${pipe_radius}"  direction="0" />
-  <joint name="pipe_joint1" type="fixed">
-    <parent link="main_pipe"/>
-    <child link="sub_pipe1"/>
+    </link>alve_p
     <origin xyz="0 ${main_pipe_length * 0.5 - pipe_radius} 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>

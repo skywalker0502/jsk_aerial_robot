@@ -87,56 +87,56 @@
     </link> -->
      <link name="manipulator_link_1">
       <inertial>
-        <origin xyz="-0.18 0.19 0.4" rpy="0 0 0"/>
+        <origin xyz="-0.18 0.19 -0.02" rpy="0 0 0"/>
         <mass value="0.06"/>
         <inertia
             ixx="0.0001" iyy="0.0001" izz="0.0001"
             ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual>
-        <origin xyz="-0.18 0.19 0.2" rpy="0 0 3.141592"/>
+        <origin xyz="-0.18 0.19 -0.02" rpy="0 0 3.141592"/>
         <geometry>
           <mesh filename="package://beetle/urdf/mesh/manipulator_v1.1.2.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.18 0.19 0.2" rpy="0 0 0"/>
+        <origin xyz="-0.18 0.19 -0.02" rpy="0 0 0"/>
         <geometry>
-          <box size="0.016 0.016 0.52"/>
+          <box size="0.016 0.016 0.42"/>
         </geometry>
       </collision>
     </link>
     <joint name="manipulator_joint_1" type="fixed">
       <parent link="base_link"/>
       <child link="manipulator_link_1"/>
-      <origin xyz="-0.18 0.19 0.2" rpy="0 0 0"/>
+      <origin xyz="-0.18 0.19 -0.02" rpy="0 0 0"/>
     </joint> 
 
      <link name="manipulator_link_2">
       <inertial>
-        <origin xyz="0.003 -0.18 0.3" rpy="0 0 0"/>
+        <origin xyz="-0.18 -0.031 -0.02" rpy="0 0 0"/>
         <mass value="0.06"/>
         <inertia
             ixx="0.0001" iyy="0.0001" izz="0.0001"
             ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual>
-        <origin xyz="0.003 -0.18 0.3" rpy="0 0 3.141592"/>
+        <origin xyz="-0.18 -0.031 -0.02" rpy="0 0 3.141592"/>
         <geometry>
           <mesh filename="package://beetle/urdf/mesh/manipulator_v1.1.2.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.003 -0.18 0.3" rpy="0 0 0"/>
+        <origin xyz="-0.18 -0.031 -0.02" rpy="0 0 0"/>
         <geometry>
-          <box size="0.016 0.016 0.52"/>
+          <box size="0.016 0.016 0.42"/>
         </geometry>
       </collision>
     </link>
     <joint name="manipulator_joint_2" type="fixed">
       <parent link="base_link"/>
       <child link="manipulator_link_2"/>
-      <origin xyz="0.003 -0.18 0.3" rpy="0 0 0"/>
+      <origin xyz="-0.18 -0.031 -0.02" rpy="0 0 0"/>
     </joint> 
 
     ## rotor arm macro

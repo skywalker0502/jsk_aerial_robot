@@ -37,6 +37,29 @@
       <uri>model://ground_plane</uri>
     </include>
 
+    <!-- A paltform for drone with manipulator to take off -->
+    <model name="take off platorm">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>2 0.20 0.65</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>2 0.20 0.65</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      <pose>0 0 0 0 0 0</pose>
+    </model>
+
+
     <!-- Some walls on the plane -->
     <model name="wall_1">
       <static>true</static>

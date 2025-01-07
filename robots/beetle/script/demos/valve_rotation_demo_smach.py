@@ -64,7 +64,7 @@ class MoveToValveState(smach.State):
         self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
         self.maze_entrance_x = 7.0
         self.valve_pos_x = 15.0
-        self.valve_pos_z = 1.4
+        self.valve_pos_z = 0.4
         self.beetle_1_y_path = 0.75
         self.beetle_2_y_path = -0.75
         self.assembling_distance = 1.1
@@ -75,11 +75,13 @@ class MoveToValveState(smach.State):
         pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.maze_entrance_x
         pos_beetle_1.pose.position.y = self.beetle_1_y_path
-        pos_beetle_1.pose.position.z = self.valve_pos_z - 0.4
+        pos_beetle_1.pose.position.z = self.valve_pos_z + 0.6
+        pos_beetle_1.pose.orientation.x = 1.0
 
         pos_beetle_2.pose.position.x = self.maze_entrance_x
         pos_beetle_2.pose.position.y = self.beetle_2_y_path
-        pos_beetle_2.pose.position.z = self.valve_pos_z - 0.4
+        pos_beetle_2.pose.position.z = self.valve_pos_z + 0.6
+        pos_beetle_2.pose.orientation.x = 1.0
 
         self.pos_beetle_1_pub.publish(pos_beetle_1)
         self.pos_beetle_2_pub.publish(pos_beetle_2)
@@ -104,7 +106,7 @@ class RotateValveState(smach.State):
         self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
         self.valve_pos_x = 15.0
         self.valve_pos_y = 0.0
-        self.valve_pos_z = 1.4
+        self.valve_pos_z = 0.4
         self.valve_rotation_angle = 3.14
         self.assembling_distance = 1.1
     def execute(self, userdata):
@@ -113,8 +115,8 @@ class RotateValveState(smach.State):
         pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.valve_pos_x-self.assembling_distance 
         pos_beetle_2.pose.position.y = self.valve_pos_y
-        pos_beetle_2.pose.position.z = self.valve_pos_z-0.5
-        pos_beetle_1.pose.position.z = self.valve_pos_z-0.5
+        pos_beetle_2.pose.position.z = self.valve_pos_z+1.5
+        pos_beetle_1.pose.position.z = self.valve_pos_z+1.5
         pos_beetle_1.pose.position.y = self.valve_pos_y
         pos_beetle_2.pose.position.x = self.valve_pos_x+0.2
         self.pos_beetle_2_pub.publish(pos_beetle_2)
@@ -135,9 +137,9 @@ class RotateValveState(smach.State):
         pos_assembly = FlightNav()
         pos_assembly.target = 1
         pos_assembly.pos_z_nav_mode = 2
-        pos_assembly.target_pos_z = self.valve_pos_z
+        pos_assembly.target_pos_z = self.valve_pos_z+1.0
 
-        # 提升至阀门高度
+        # 下降至阀门高度
         self.pos_pub.publish(pos_assembly)
         rospy.loginfo("Moving to valve height...")
         time.sleep(6)
@@ -149,8 +151,8 @@ class RotateValveState(smach.State):
         rospy.loginfo("Rotating the valve...")
         time.sleep(7)
 
-        # 降低高度
-        pos_assembly.target_pos_z = 1.0
+        # 上升高度
+        pos_assembly.target_pos_z = 1.5
         self.pos_pub.publish(pos_assembly)
         rospy.loginfo("Lowering after rotation...")
         time.sleep(4)
@@ -218,12 +220,9 @@ class LeaveValveState(smach.State):
 
 def main():
     rospy.init_node('valverotation_demo')
-
-    # 创建 SMACH 状态机
     sm = smach.StateMachine(outcomes=['TASK_COMPLETED', 'TASK_FAILED'])
 
     with sm:
-        # 注册各个状态及其可能的跳转结果
         smach.StateMachine.add('STANDBY', StandbyState(),
                                transitions={'succeeded': 'MOVE_TO_GATE', 'failed': 'TASK_FAILED'})
 
@@ -241,8 +240,6 @@ def main():
 
         smach.StateMachine.add('LEAVE_VALVE', LeaveValveState(),
                                transitions={'succeeded': 'TASK_COMPLETED', 'failed': 'TASK_FAILED'})
-
-    # 执行 SMACH 状态机
     outcome = sm.execute()
 
 if __name__ == '__main__':

@@ -44,14 +44,14 @@
         <collision name="collision">
           <geometry>
             <box>
-              <size>2 0.20 0.65</size>
+              <size>2 0.15 0.65</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual">
           <geometry>
             <box>
-              <size>2 0.20 0.65</size>
+              <size>2 0.15 0.65</size>
             </box>
           </geometry>
         </visual>
@@ -354,6 +354,10 @@
       </link>
       <pose>18 -1.8 0 0 0 -1.5708</pose>
     </model>
+
+    <!-- World plugin: Link attacher -->
+    <plugin name="link_attacher_plugin" filename="libgazebo_ros_link_attacher.so">
+    </plugin>
 
   </world>
 </sdf>

@@ -13,6 +13,10 @@ from beetle.kondo_control_api import KondoControl
 from beetle.utils import coordTransformer
 import numpy as np
 import tf
+from beetle.gazebo_link_attacher import GazeboLinkAttacher
+from beetle.gazebo_link_detacher import GazeboLinkDetacher
+from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
+
 
 #### state classes ####
 
@@ -474,7 +478,14 @@ class AssemblyState(smach.State):
         self.flag_msg.key = str(self.leader_id)
         self.flag_msg.value = '1'
         self.flag_pub_leader.publish(self.flag_msg)
-        rospy.sleep(5.0)
+        rospy.sleep(1.0)
+        try:
+            link_attacher = GazeboLinkAttacher(self.robot_name, 'root', self.leader, 'root')
+            link_attacher.attach_links()
+        except rospy.ServiceException:
+            rospy.loginfo("Attacher failed")        
+        rospy.sleep(4.0)
+
         return 'done'
 
     def emergencyCb(self,msg):

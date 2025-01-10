@@ -10,25 +10,11 @@ from aerial_robot_msgs.msg import FlightNav
 from spinal.msg import DesireCoord
 from geometry_msgs.msg import PoseStamped
 
-class StandbyState(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['succeeded', 'failed'])
-        self.demo_assemble = AssembleDemo()
-
-    def execute(self, userdata):
-        rospy.loginfo("Executing Standby State...")
-        try:
-            self.demo_assemble.main()
-            rospy.loginfo("AssembleDemo succeeded!")
-            return 'succeeded'
-        except rospy.ROSInterruptException:
-            rospy.logerr("Standby State failed.")
-            return 'failed'
 
 class MoveToGateState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['succeeded'])
-        self.pos_pub = rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=1)
+        self.pos_pub = rospy.Publisher("/beetle1/uav/nav", FlightNav, queue_size=1)
         self.maze_entrance_x = 7.0
 
     def execute(self, userdata):
@@ -61,37 +47,25 @@ class MoveToValveState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['succeeded'])
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
-        self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
         self.maze_entrance_x = 7.0
         self.valve_pos_x = 15.0
         self.valve_pos_z = 0.4
         self.beetle_1_y_path = 0.75
-        self.beetle_2_y_path = -0.75
         self.assembling_distance = 1.1
 
     def execute(self, userdata):
         rospy.loginfo("Moving to the valve...")
         pos_beetle_1 = PoseStamped()
-        pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.maze_entrance_x
         pos_beetle_1.pose.position.y = self.beetle_1_y_path
         pos_beetle_1.pose.position.z = self.valve_pos_z + 0.6
         pos_beetle_1.pose.orientation.x = 1.0
-
-        pos_beetle_2.pose.position.x = self.maze_entrance_x
-        pos_beetle_2.pose.position.y = self.beetle_2_y_path
-        pos_beetle_2.pose.position.z = self.valve_pos_z + 0.6
-        pos_beetle_2.pose.orientation.x = 1.0
-
         self.pos_beetle_1_pub.publish(pos_beetle_1)
-        self.pos_beetle_2_pub.publish(pos_beetle_2)
         time.sleep(6)
 
         pos_beetle_1.pose.position.x = self.valve_pos_x - self.assembling_distance
-        pos_beetle_2.pose.position.x = self.valve_pos_x - self.assembling_distance
 
         self.pos_beetle_1_pub.publish(pos_beetle_1)
-        self.pos_beetle_2_pub.publish(pos_beetle_2)
         time.sleep(14)
 
         rospy.loginfo("Reached the valve.")
@@ -101,9 +75,8 @@ class RotateValveState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['succeeded', 'failed'])
         self.demo_assemble = AssembleDemo()  
-        self.pos_pub = rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=10)
+        self.pos_pub = rospy.Publisher("/beetle1/uav/nav", FlightNav, queue_size=10)
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
-        self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
         self.valve_pos_x = 15.0
         self.valve_pos_y = 0.0
         self.valve_pos_z = 0.4
@@ -112,24 +85,12 @@ class RotateValveState(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Starting assembly for valve rotation...")
         pos_beetle_1 = PoseStamped()
-        pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.valve_pos_x-self.assembling_distance 
-        pos_beetle_2.pose.position.y = self.valve_pos_y
-        pos_beetle_2.pose.position.z = self.valve_pos_z+1.0
         pos_beetle_1.pose.position.z = self.valve_pos_z+1.0
         pos_beetle_1.pose.position.y = self.valve_pos_y
-        pos_beetle_2.pose.position.x = self.valve_pos_x-0.15
-        self.pos_beetle_2_pub.publish(pos_beetle_2)
-        time.sleep(1.5)
         self.pos_beetle_1_pub.publish(pos_beetle_1)
         time.sleep(6)
-        try:
-            self.demo_assemble.main()
-            rospy.loginfo("Assembly completed successfully.")
-        except rospy.ROSInterruptException:
-            rospy.logerr("Assembly process failed.")
-            return 'failed'
-        
+ 
         rospy.loginfo("Starting valve rotation task...")
         pos_assembly = FlightNav()
         pos_assembly.target = 1
@@ -162,10 +123,8 @@ class LeaveValveState(smach.State):
         smach.State.__init__(self, outcomes=['succeeded', 'failed'])
         self.demo_disassemble = DisassembleDemo()  # 调用 DisassemblyDemo
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
-        self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
         self.maze_exit_x = 25.0
         self.beetle_1_y_path = -0.75
-        self.beetle_2_y_path = +0.75
 
     def execute(self, userdata):
         rospy.loginfo("Starting disassembly to separate robots...")
@@ -179,29 +138,17 @@ class LeaveValveState(smach.State):
         rospy.loginfo("Robots are leaving the valve area...")
 
         pos_beetle_1 = PoseStamped()
-        pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.maze_exit_x-7.5
         pos_beetle_1.pose.position.y = self.beetle_1_y_path
         pos_beetle_1.pose.position.z = 1.0
         pos_beetle_1.pose.orientation.x = 1.0
 
-        pos_beetle_2.pose.position.x = self.maze_exit_x-7.5
-        pos_beetle_2.pose.position.y = self.beetle_2_y_path
-        pos_beetle_2.pose.position.z = 1.0
-        pos_beetle_2.pose.orientation.x = 1.0
-
         self.pos_beetle_1_pub.publish(pos_beetle_1)
-        self.pos_beetle_2_pub.publish(pos_beetle_2)
         time.sleep(8)
         pos_beetle_1.pose.position.x = self.maze_exit_x
         pos_beetle_1.pose.position.y = self.beetle_1_y_path
         pos_beetle_1.pose.position.z = 1.0
-
-        pos_beetle_2.pose.position.x = self.maze_exit_x
-        pos_beetle_2.pose.position.y = self.beetle_2_y_path
-        pos_beetle_2.pose.position.z = 1.0
         self.pos_beetle_1_pub.publish(pos_beetle_1)
-        self.pos_beetle_2_pub.publish(pos_beetle_2)
         rospy.loginfo("Moving robots to exit...")
         time.sleep(10)
 
@@ -214,8 +161,6 @@ def main():
     sm = smach.StateMachine(outcomes=['TASK_COMPLETED', 'TASK_FAILED'])
 
     with sm:
-        smach.StateMachine.add('STANDBY', StandbyState(),
-                               transitions={'succeeded': 'MOVE_TO_GATE', 'failed': 'TASK_FAILED'})
 
         smach.StateMachine.add('MOVE_TO_GATE', MoveToGateState(),
                                transitions={'succeeded': 'DISASSEMBLE'})

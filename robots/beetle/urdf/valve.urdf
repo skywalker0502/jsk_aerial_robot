@@ -5,13 +5,13 @@
 
   <!-- <xacro:arg name="valve_pitch_angle" default="180" /> deg -->
   <xacro:arg name="valve_pitch_angle" default="0" /> <!-- deg -->
-  <xacro:arg name="valve_friction" default="1.0" /> <!-- Nm -->
+  <xacro:arg name="valve_friction" default="0.3" /> <!-- Nm -->
   <xacro:arg name="no_collsion" default="false" />
   <xacro:property name="valve_height" value="${0.3 + $(arg valve_pitch_angle) * 0.01}" />
-  <xacro:property name="i_beam_length" value="0.8" /> 
+  <xacro:property name="i_beam_length" value="2.3" /> 
   <xacro:property name="i_beam_width" value="0.05" /> 
   <xacro:property name="i_beam_height" value="0.05" /> 
-  <xacro:property name="i_beam_mass" value="2.0" /> 
+  <xacro:property name="i_beam_mass" value="0.2" /> 
 
 <!-- 2024/10/25 -->
   <!-- <xacro:property name="pi" value="3.141592653589793" />  -->

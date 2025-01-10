@@ -478,7 +478,7 @@ class AssemblyState(smach.State):
         self.flag_msg.key = str(self.leader_id)
         self.flag_msg.value = '1'
         self.flag_pub_leader.publish(self.flag_msg)
-        rospy.sleep(1.0)
+        rospy.sleep(0.3)
         try:
             link_attacher = GazeboLinkAttacher(self.robot_name, 'root', self.leader, 'root')
             link_attacher.attach_links()

@@ -381,6 +381,10 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
     {
       joy_cmd = ps4joyToPs3joyConvert(*joy_msg);
     }
+  else if(joy_msg->axes.size() == MA_AXES && joy_msg->buttons.size() == MA_BUTTONS)
+    {
+      joy_cmd = ps4joyToPs3joyConvert(*joy_msg);
+    }
   else
     {
       ROS_WARN("the joystick type is not supported (buttons: %d, axes: %d)", (int)joy_msg->buttons.size(), (int)joy_msg->axes.size());

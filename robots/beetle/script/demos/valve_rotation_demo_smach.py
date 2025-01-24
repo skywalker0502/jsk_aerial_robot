@@ -9,6 +9,7 @@ from beetle.disassembly_api import DisassembleDemo
 from aerial_robot_msgs.msg import FlightNav
 from spinal.msg import DesireCoord
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 
 class StandbyState(smach.State):
     def __init__(self):
@@ -62,15 +63,21 @@ class MoveToValveState(smach.State):
         smach.State.__init__(self, outcomes=['succeeded'])
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
         self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
+        self.pos_valve_sub = rospy.Subscriber("/valve/odom", Odometry, self.valve_pos_callback, queue_size=1)
         self.maze_entrance_x = 7.0
-        self.valve_pos_x = 15.0
-        self.valve_pos_z = 0.4
+        self.valve_pos_x = None
+        self.valve_pos_z = None      #0.4#
         self.beetle_1_y_path = 0.75
         self.beetle_2_y_path = -0.75
         self.assembling_distance = 1.1
-
+    def valve_pos_callback(self, msg):
+        self.valve_pos_x = msg.pose.pose.position.x
+        self.valve_pos_z = msg.pose.pose.position.z-0.17
     def execute(self, userdata):
         rospy.loginfo("Moving to the valve...")
+        while self.valve_pos_x is None or self.valve_pos_z is None:
+            rospy.logerr("Valve position data not received yet!")
+            time.sleep(0.1)
         pos_beetle_1 = PoseStamped()
         pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.maze_entrance_x
@@ -104,13 +111,21 @@ class RotateValveState(smach.State):
         self.pos_pub = rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=10)
         self.pos_beetle_1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
         self.pos_beetle_2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
-        self.valve_pos_x = 15.0
-        self.valve_pos_y = 0.0
-        self.valve_pos_z = 0.4
+        self.pos_valve_sub = rospy.Subscriber("/valve/odom", Odometry, self.valve_pos_callback, queue_size=1)
+        self.valve_pos_x = None
+        self.valve_pos_y = None
+        self.valve_pos_z = None
         self.valve_rotation_angle = 3.14
         self.assembling_distance = 1.1
+    def valve_pos_callback(self, msg):
+        self.valve_pos_x = msg.pose.pose.position.x
+        self.valve_pos_y = msg.pose.pose.position.y
+        self.valve_pos_z = msg.pose.pose.position.z-0.17
     def execute(self, userdata):
         rospy.loginfo("Starting assembly for valve rotation...")
+        while self.valve_pos_x is None or self.valve_pos_z is None:
+            rospy.logerr("Valve position data not received yet!")
+            time.sleep(0.1)
         pos_beetle_1 = PoseStamped()
         pos_beetle_2 = PoseStamped()
         pos_beetle_1.pose.position.x = self.valve_pos_x-self.assembling_distance 

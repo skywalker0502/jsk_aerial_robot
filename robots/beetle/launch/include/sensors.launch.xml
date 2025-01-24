@@ -4,7 +4,6 @@
   <arg name="simulation" default="false" />
   <arg name="robot_ns" default="gimbalrotor" />
   <arg name="robot_id" default="1" />
-  <arg name="valve_id" default="85" />
   <group ns="$(arg robot_ns)">
 
     <group if="$(arg real_machine)">
@@ -20,10 +19,6 @@
       <!-- mocap -->
       <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch">
 	<arg name="robot_id" value="$(arg robot_id)"/>
-      </include>
-      <!-- mocap for valve -->
-      <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch">
-	<arg name="robot_id" value="$(arg valve_id)"/>
       </include>
     </group>
 

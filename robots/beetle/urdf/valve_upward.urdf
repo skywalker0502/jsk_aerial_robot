@@ -226,4 +226,13 @@
     </plugin>
   </gazebo>
 
+  <!-- <gazebo>
+    <plugin name="valve_pose_publisher" filename="libgazebo_ros_p3d.so">
+      <robotNamespace>/valve</robotNamespace>
+      <frameName>world</frameName>
+      <topicName>valve/pose</topicName>
+      <updateRate>10</updateRate>
+    </plugin>
+  </gazebo> -->
+
 </robot>

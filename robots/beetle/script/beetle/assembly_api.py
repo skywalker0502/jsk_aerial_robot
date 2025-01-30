@@ -35,9 +35,9 @@ class StandbyState(smach.State):
                  female_servo_id = 6,
                  real_machine = False,
                  unlock_servo_angle_male = 7000,
-                 lock_servo_angle_male = 8400,###8800###
+                 lock_servo_angle_male = 7700,###8800###
                  unlock_servo_angle_female = 11000,
-                 lock_servo_angle_female = 5800,###5600###
+                 lock_servo_angle_female = 8000,###5600###
                  leader = 'beetle2',
                  leader_id = 2,
                  airframe_size = 0.52,
@@ -225,9 +225,9 @@ class ApproachState(smach.State):
                  female_servo_id = 6,
                  real_machine = False,
                  unlock_servo_angle_male = 7000,
-                 lock_servo_angle_male = 8400,###8800###
+                 lock_servo_angle_male = 7700,###8800###
                  unlock_servo_angle_female = 11000,
-                 lock_servo_angle_female = 5800,##5600##
+                 lock_servo_angle_female = 8000,##5600##
                  leader = 'beetle2',
                  leader_id = 2,
                  airframe_size = 0.52,
@@ -413,9 +413,9 @@ class AssemblyState(smach.State):
                  female_servo_id = 6,
                  real_machine = False,
                  unlock_servo_angle_male = 7000,
-                 lock_servo_angle_male = 8400,###8800###
+                 lock_servo_angle_male = 7700,###8800###
                  unlock_servo_angle_female = 11000,
-                 lock_servo_angle_female = 5800,###5600###
+                 lock_servo_angle_female = 8000,###5600###
                  leader = 'beetle2',
                  leader_id = 2,
                  attach_dir = -1.0):

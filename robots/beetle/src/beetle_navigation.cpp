@@ -139,6 +139,20 @@ void BeetleNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
       joy_pitch_positive_flag_ = false;
       joy_pitch_negative_flag_ = false;
     }
+    /* X, Y, and Yaw Control */
+  double raw_x_cmd = joy_cmd.axes[PS3_AXIS_STICK_LEFT_UPWARDS];
+  double raw_y_cmd = joy_cmd.axes[PS3_AXIS_STICK_LEFT_LEFTWARDS];
+  double raw_yaw_cmd = joy_cmd.axes[PS3_AXIS_STICK_RIGHT_LEFTWARDS];
+
+  if(fabs(raw_x_cmd) < joy_stick_deadzone_) raw_x_cmd = 0;
+  if(fabs(raw_y_cmd) < joy_stick_deadzone_) raw_y_cmd = 0;
+  if(fabs(raw_yaw_cmd) < joy_stick_deadzone_) raw_yaw_cmd = 0;
+
+  setTargetPosCandX(getTargetPosCand().x() + raw_x_cmd * max_teleop_xy_vel_ * 0.012);
+  setTargetPosCandY(getTargetPosCand().y() + raw_y_cmd * max_teleop_xy_vel_ * 0.012);
+  setTargetYaw(angles::normalize_angle(getTargetRPY().z() + raw_yaw_cmd * max_teleop_yaw_vel_ * 0.001));
+  setTargetOmegaZ(0);
+
   BaseNavigator::joyStickControl(joy_msg);
 }
 

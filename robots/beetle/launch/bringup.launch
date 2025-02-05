@@ -7,7 +7,7 @@
   <arg name="estimate_mode"  default= "1" />
   <arg name="sim_estimate_mode"  default= "2" />
   <arg name="headless" default="True" />
-  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/swarm.world" />
+  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty_swarm.world" />
   <arg name="launch_gazebo" default="True" />
   <arg name="direct_model" default="False" />
   <arg name="direct_model_name" />
@@ -19,11 +19,11 @@
   <arg name="robot_id" default="1" />
   <arg name="valve_id" default="85" />
   <arg name="robot_ns" value="beetle$(arg robot_id)" />
-  <arg name="valve_ns" value="valve$(arg valve_id)" />
+  <!-- <arg name="valve_ns" value="valve$(arg valve_id)" />
   <arg name="valve_x" default="8" />
   <arg name="valve_y" default="0" />
   <arg name="valve_yaw" default="0" />
-  <arg name="dollar" default="$" />
+  <arg name="dollar" default="$" /> -->
 
   ###########  Parameters  ###########
   <group ns="$(arg robot_ns)">
@@ -90,13 +90,13 @@
     <arg name="robot_id" value="$(arg robot_id)"/>
   </include >
 
-  ########## Mocap for valve ##########
+  <!-- ########## Mocap for valve ##########
    <include file="$(find beetle)/launch/include/valve.launch.xml" >
     <arg name="real_machine" value="$(arg real_machine)" />
     <arg name="simulation" value="$(arg simulation)" />
     <arg name="robot_ns" value="$(arg valve_ns)" />
     <arg name="robot_id" value="$(arg valve_id)"/>
-  </include >
+  </include > -->
   
   ###########  Servo Bridge  ###########
   <node pkg="aerial_robot_model" type="servo_bridge_node" name="servo_bridge" ns="$(arg robot_ns)" output="screen" />
@@ -114,15 +114,7 @@
     <arg name="spawn_yaw" value="$(arg spawn_yaw)" />
   </include>
 <!-- Adding a valve to gezebo world -->
-  <!-- <param name="valve_urdf"  command="$(find xacro)/xacro '$(find beetle)/urdf/valve.xacro'" />
-  <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 10 -y 0 -z 0 -Y 0 -param valve_urdf" /> -->
-  <param name="robot_description"
+  <!-- <param name="robot_description"
   command="$(find xacro)/xacro $(find beetle)/urdf/valve.urdf no_collision:=false" />
-  <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 15 -y 0 -z 0 -Y 0 -param robot_description" />
-
-  <!-- Adding link_attacher in gazebo -->
-  <!-- <node name="$(anon spawn_beetle1_link_attacher)" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model beetle1"/>
-  <node name="$(anon spawn_beetle2_link_attacher)" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model beetle2"/> -->
-
-
+  <node pkg="gazebo_ros" type="spawn_model" name="$(anon spawn_valve_test)" respawn="false" output="screen" args=" -urdf -model valve  -x 15 -y 0 -z 0 -Y 0 -param robot_description" /> -->
 </launch>

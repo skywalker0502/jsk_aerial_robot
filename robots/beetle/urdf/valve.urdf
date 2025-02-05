@@ -12,6 +12,8 @@
   <xacro:property name="i_beam_width" value="0.05" /> 
   <xacro:property name="i_beam_height" value="0.05" /> 
   <xacro:property name="i_beam_mass" value="0.2" /> 
+  <xacro:arg name="no_collision" default="false"/>
+
 
 <!-- 2024/10/25 -->
   <!-- <xacro:property name="pi" value="3.141592653589793" />  -->

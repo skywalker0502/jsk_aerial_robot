@@ -1,19 +1,18 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="real_machine" default="false" />
+  <arg name="real_machine" default="true" />
   <arg name="simulation" default="false" />
   <arg name="robot_ns" default="valve" />
   <arg name="valve_id" default="85" />
   <arg name="robot_id" default="1" />
-  <group ns="$(arg robot_ns)">
 
+  <group ns="$(arg robot_ns)">
     <group if="$(arg real_machine)">
       <group unless="$(arg simulation)">
-
-      <!-- mocap for valve -->
-      <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch">
-	<arg name="robot_id" value="$(arg valve_id)"/>
-      </include>
+        <!-- mocap for valve -->
+        <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch">
+          <arg name="robot_id" value="$(arg valve_id)" />
+        </include>
       </group>
     </group>
   </group>

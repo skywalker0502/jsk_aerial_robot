@@ -158,9 +158,12 @@ class MoveAndRotateValveState(smach.State):
 
         rate = rospy.Rate(20)
         step_size_z = 0.02  
+        count_i = 0
 
         if maintain_z:
             fixed_z = self.current_pos.pose.position.z  
+        else:
+            fixed_z = target_z  
 
         self.pid_x.reset()
         self.pid_y.reset()
@@ -184,12 +187,12 @@ class MoveAndRotateValveState(smach.State):
                 target_pos_z = fixed_z  
             else:
                 if abs(error_z) > tolerance:
-                    if fixed_z > current_z:
-                        target_pos_z = min(current_z + step_size_z, fixed_z)
+                    if target_z > current_z:
+                        target_pos_z = min(current_z + step_size_z, target_z)  
                     else:
-                        target_pos_z = max(current_z - step_size_z, fixed_z)
+                        target_pos_z = max(current_z - step_size_z, target_z)  
                 else:
-                    target_pos_z = round(fixed_z, 4)
+                    target_pos_z = round(target_z, 4)  
 
             pos_cmd = FlightNav()
             pos_cmd.target = 1
@@ -199,9 +202,9 @@ class MoveAndRotateValveState(smach.State):
 
             pos_cmd.pos_z_nav_mode = 2  
             pos_cmd.target_pos_z = target_pos_z
-
-            rospy.loginfo(f"Publishing - vx: {vx:.4f}, vy: {vy:.4f}, target_pos_z: {target_pos_z:.4f}")
-
+            count_i = count_i +1    
+            if count_i % 20 == 0:
+                rospy.loginfo(f"Publishing - vx: {vx:.4f}, vy: {vy:.4f}, target_pos_z: {target_pos_z:.4f}")
             self.pos_pub.publish(pos_cmd)
             rate.sleep()
 
@@ -210,10 +213,13 @@ class MoveAndRotateValveState(smach.State):
                 break
 
 
-    def maintain_position_during_rotation(self, target_x, target_y, target_z, target_yaw, duration, yaw_tolerance=0.05):
 
+    def maintain_position_during_rotation(self, target_x, target_y, target_z, target_yaw, duration, yaw_tolerance=0.05):
         rate = rospy.Rate(20)  
         start_time = rospy.Time.now().to_sec()
+
+        current_yaw = self.get_uav_yaw()  
+        yaw_step = 0.05  
 
         while not rospy.is_shutdown():
             elapsed_time = rospy.Time.now().to_sec() - start_time
@@ -226,7 +232,13 @@ class MoveAndRotateValveState(smach.State):
 
             yaw_error = target_yaw - current_yaw
             yaw_error = (yaw_error + math.pi) % (2 * math.pi) - math.pi  
-            rospy.loginfo(f"Yaw error: {yaw_error:.4f}, target: {target_yaw:.4f}, current: {current_yaw:.4f}")
+
+            if abs(yaw_error) > yaw_step:
+                target_yaw_step = current_yaw + (yaw_step if yaw_error > 0 else -yaw_step)
+            else:
+                target_yaw_step = target_yaw  
+
+            rospy.loginfo(f"Yaw error: {yaw_error:.4f}, target step: {target_yaw_step:.4f}, current: {current_yaw:.4f}")
 
             if abs(yaw_error) < yaw_tolerance:
                 rospy.loginfo("Rotation complete: UAV reached target yaw.")
@@ -240,10 +252,11 @@ class MoveAndRotateValveState(smach.State):
             pos_cmd.pos_z_nav_mode = 1
             pos_cmd.target_vel_z = 0
             pos_cmd.yaw_nav_mode = 2
-            pos_cmd.target_yaw = target_yaw  
+            pos_cmd.target_yaw = target_yaw_step 
 
             self.pos_pub.publish(pos_cmd)
             rate.sleep()
+
 
     def execute(self, userdata):
         if not self.pos_initialization:

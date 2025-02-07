@@ -10,6 +10,7 @@
   <arg name="valve_y" default="0" />
   <arg name="valve_z" default="0" />
   <arg name="valve_yaw" default="0" />
+  <group ns="$(arg robot_ns)">
     <group if="$(arg real_machine)">
       <group unless="$(arg simulation)">
         <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch">
@@ -25,4 +26,5 @@
           args="-urdf -model valve -x $(arg valve_x) -y $(arg valve_y) -z $(arg valve_z) -Y $(arg valve_yaw) -param robot_description" />
       </group>
     </group>
+  </group>
 </launch>

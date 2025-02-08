@@ -10,33 +10,60 @@ from nav_msgs.msg import Odometry
 import threading
 from tf.transformations import euler_from_quaternion
 import math
+import numpy as np
 
-class PIDController:
-    def __init__(self, kp, ki, kd, max_output=None, min_output=None):
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
-        self.max_output = max_output
-        self.min_output = min_output
-        self.integral = 0
-        self.previous_error = 0
+class PolynomialTrajectory:
+    def __init__(self, duration):
+        self.duration = duration
+        self.coeffs_x = None
+        self.coeffs_y = None
+        self.coeffs_z = None
+        self.coeffs_scalar = None  
+        self.start_time = None
+        self.is_scalar = False  
 
-    def reset(self):
-        self.integral = 0
-        self.previous_error = 0
+    def compute_coefficients(self, start, target):
+        T = self.duration
+        A = np.array([
+            [0,         0,      0,    0,  0, 1],
+            [T**5,     T**4,   T**3,  T**2, T, 1],
+            [0,         0,      0,    0,  1, 0],
+            [5*T**4,   4*T**3, 3*T**2, 2*T, 1, 0],
+            [0,         0,      0,    2,   0, 0],
+            [20*T**3, 12*T**2, 6*T,    2,   0, 0]
+        ])
+        B = np.array([start, target, 0, 0, 0, 0])
+        return np.linalg.solve(A, B)
 
-    def compute(self, target, current, dt):
-        error = target - current
-        self.integral += error * dt
-        derivative = (error - self.previous_error) / dt if dt > 0 else 0
-        self.previous_error = error
+    def generate_trajectory(self, start_pos, target_pos):
 
-        output = self.kp * error + self.ki * self.integral + self.kd * derivative
-        if self.max_output is not None:
-            output = min(output, self.max_output)
-        if self.min_output is not None:
-            output = max(output, self.min_output)
-        return output
+        if isinstance(start_pos, (int, float)) and isinstance(target_pos, (int, float)):
+            self.is_scalar = True
+            self.coeffs_scalar = self.compute_coefficients(start_pos, target_pos)
+        else:
+            self.is_scalar = False
+            self.coeffs_x = self.compute_coefficients(start_pos[0], target_pos[0])
+            self.coeffs_y = self.compute_coefficients(start_pos[1], target_pos[1])
+            self.coeffs_z = self.compute_coefficients(start_pos[2], target_pos[2])
+        self.start_time = rospy.Time.now().to_sec()
+
+    def evaluate(self):
+        if self.start_time is None:
+            return None
+        elapsed_time = rospy.Time.now().to_sec() - self.start_time
+        if elapsed_time > self.duration:
+            return None 
+        T = np.array([elapsed_time**5, elapsed_time**4, elapsed_time**3, 
+                      elapsed_time**2, elapsed_time, 1])
+        if self.is_scalar:
+            return np.dot(self.coeffs_scalar, T)
+        else:
+            return (
+                np.dot(self.coeffs_x, T),
+                np.dot(self.coeffs_y, T),
+                np.dot(self.coeffs_z, T)
+            )
+
 
 class MoveAndRotateValveState(smach.State):
     def __init__(self):
@@ -57,16 +84,11 @@ class MoveAndRotateValveState(smach.State):
             self.pos_valve_sim_sub = rospy.Subscriber("/valve/odom", Odometry, self.valve_sim_callback, queue_size=1)
         else:
             self.pos_valve_sub = rospy.Subscriber("/valve/mocap/pose", PoseStamped, self.valve_callback, queue_size=1)
-
         self.pos_initialization = False 
         self.wait_for_initialization(timeout=10)
-
         self.z_offset_real = 0.21
         self.z_offset_sim = 0.23
         self.valve_rotation_angle = math.pi / 2.0  
-        self.pid_x = PIDController(0.2, 0.0, 0.1, max_output=0.15, min_output=-0.15)
-        self.pid_y = PIDController(0.2, 0.0, 0.1, max_output=0.15, min_output=-0.15)
-
 
     def beetle_2_callback(self, msg):
         self.pos_beetle_2 = msg
@@ -155,105 +177,64 @@ class MoveAndRotateValveState(smach.State):
             rospy.logwarn("Failed to went to the position.")
             return False
 
-    def approach_target_valve(self, target_x, target_y, target_z, tolerance=0.05, maintain_z=False):
+    def move_to_target_poly(self, target_x, target_y, target_z, duration=10.0):
 
+        self.update_current_pos()
+        start_pos = (
+            self.current_pos.pose.position.x,
+            self.current_pos.pose.position.y,
+            self.current_pos.pose.position.z
+        )
+        target_pos = (target_x, target_y, target_z)
+        rospy.loginfo(f"Moving from {start_pos} to {target_pos} over {duration} seconds.")
+        traj = PolynomialTrajectory(duration)
+        traj.generate_trajectory(start_pos, target_pos)
         rate = rospy.Rate(20)
-        step_size_z = 0.05  
-        count_i = 0
-        if maintain_z:
-            fixed_z = self.current_pos.pose.position.z  
-        else:
-            fixed_z = target_z
-
-
-        self.pid_x.reset()
-        self.pid_y.reset()
-
         while not rospy.is_shutdown():
-            self.update_current_pos()
-
-            current_x = self.current_pos.pose.position.x
-            current_y = self.current_pos.pose.position.y
-            current_z = self.current_pos.pose.position.z
-
-            error_x = target_x - current_x
-            error_y = target_y - current_y
-            error_z = target_z - current_z  
-
-            dt = 1.0 / 20.0
-            vx = self.pid_x.compute(target_x, current_x, dt)
-            vy = self.pid_y.compute(target_y, current_y, dt)
-
-            if maintain_z:
-                target_pos_z = fixed_z  
-            else:
-                if abs(error_z) > tolerance:
-                    if fixed_z > current_z:
-                        target_pos_z = min(current_z + step_size_z, fixed_z)
-                    else:
-                        target_pos_z = max(current_z - step_size_z, fixed_z)
-                else:
-                    target_pos_z = round(fixed_z, 3)
-
-            pos_cmd = FlightNav()
-            pos_cmd.target = 1
-            pos_cmd.pos_xy_nav_mode = 1
-            pos_cmd.target_vel_x = vx
-            pos_cmd.target_vel_y = vy
-            pos_cmd.pos_z_nav_mode = 2  
-            pos_cmd.target_pos_z = target_pos_z
-
-            if count_i % 20 == 0:
-                rospy.loginfo(f"Publishing - vx: {vx:.4f}, vy: {vy:.4f}, target_pos_z: {target_pos_z:.4f}")
-
-            self.pos_pub.publish(pos_cmd)
-            count_i = count_i+1
-            rate.sleep()
-
-            if abs(error_x) < tolerance and abs(error_y) < tolerance and abs(error_z) < tolerance:
-                time.sleep(2)
-                rospy.loginfo("Target position reached.")
-                break
-
-    def maintain_position_during_rotation(self, target_x, target_y, target_z, target_yaw, duration, yaw_tolerance=0.01,yaw_step = 0.6):
-        rate = rospy.Rate(20)  
-        start_time = rospy.Time.now().to_sec()
-        count_i = 0 
-        current_yaw = self.get_uav_yaw()  
-        while not rospy.is_shutdown():
-            elapsed_time = rospy.Time.now().to_sec() - start_time
-            if elapsed_time > duration:
-                rospy.logwarn("Rotation timeout reached, stopping rotation.")
-                break
-
-            self.update_current_pos()
-            current_yaw = self.get_uav_yaw()  
-            yaw_error = target_yaw - current_yaw
-            yaw_error = (yaw_error + math.pi) % (2 * math.pi) - math.pi  
-
-            if abs(yaw_error) > yaw_step:
-                target_yaw_step = current_yaw + (yaw_step if yaw_error > 0 else -yaw_step)
-            else:
-                target_yaw_step = target_yaw  
-            if count_i % 20 == 0:
-                rospy.loginfo(f"Yaw error: {yaw_error:.4f}, target step: {target_yaw_step:.4f}, current: {current_yaw:.4f}")
-
-            if abs(yaw_error) < yaw_tolerance:
-                time.sleep(2)
-                rospy.loginfo("Rotation complete: UAV reached target yaw.")
+            pos = traj.evaluate()
+            if pos is None:
                 break
             pos_cmd = FlightNav()
             pos_cmd.target = 1
-            pos_cmd.pos_xy_nav_mode = 2
-            pos_cmd.target_pos_x = target_x
-            pos_cmd.target_pos_y = target_y
-            pos_cmd.pos_z_nav_mode = 2
-            pos_cmd.target_pos_z = target_z
-            pos_cmd.yaw_nav_mode = 2
-            pos_cmd.target_yaw = target_yaw_step  
+            pos_cmd.pos_xy_nav_mode = FlightNav.POS_MODE
+            pos_cmd.target_pos_x = pos[0]
+            pos_cmd.target_pos_y = pos[1]
+            pos_cmd.pos_z_nav_mode = FlightNav.POS_MODE
+            pos_cmd.target_pos_z = pos[2]
             self.pos_pub.publish(pos_cmd)
-            count_i = count_i+1
             rate.sleep()
+        rospy.loginfo("Reached target position.")
+
+    def rotate_to_target_poly(self, target_yaw, duration=10.0, fixed_x=None, fixed_y=None, fixed_z=None):
+
+        current_yaw = self.get_uav_yaw()
+        rospy.loginfo(f"Rotating from yaw {current_yaw:.4f} to {target_yaw:.4f} over {duration} seconds.")
+        traj = PolynomialTrajectory(duration)
+        traj.generate_trajectory(current_yaw, target_yaw)
+        rate = rospy.Rate(20)
+        if fixed_x is None or fixed_y is None or fixed_z is None:
+            self.update_current_pos()
+            fixed_x = self.current_pos.pose.position.x
+            fixed_y = self.current_pos.pose.position.y
+            fixed_z = self.current_pos.pose.position.z
+        while not rospy.is_shutdown():
+            yaw_val = traj.evaluate()
+            if yaw_val is None:
+                break
+            pos_cmd = FlightNav()
+            pos_cmd.target = 1
+            pos_cmd.pos_xy_nav_mode = FlightNav.POS_MODE
+            pos_cmd.target_pos_x = fixed_x
+            pos_cmd.target_pos_y = fixed_y
+            pos_cmd.pos_z_nav_mode = FlightNav.POS_MODE
+            pos_cmd.target_pos_z = fixed_z
+            pos_cmd.yaw_nav_mode = FlightNav.POS_MODE
+            pos_cmd.target_yaw = yaw_val
+            self.pos_pub.publish(pos_cmd)
+            rate.sleep()
+        rospy.loginfo("Rotation complete, reached target yaw.")
+
+
 
     def execute(self, userdata):
         if not self.pos_initialization:
@@ -262,28 +243,28 @@ class MoveAndRotateValveState(smach.State):
 
         self.update_current_pos()
 
-        rospy.loginfo("Initializing position...")
-        self.maintain_position_during_rotation(self.start_x, self.start_y, self.start_z, 0, 40, yaw_tolerance=0.05)
+        rospy.loginfo("Initializing position with yaw 0...")
+        self.rotate_to_target_poly(0, duration=3.0, fixed_x=self.start_x, fixed_y=self.start_y, fixed_z=self.start_z)
 
-        rospy.loginfo("Moving to the valve position...")
-        self.approach_target_valve(self.valve_x, self.valve_y, self.current_pos.pose.position.z, maintain_z=True)
+        rospy.loginfo("Moving horizontally to the valve position...")
+        self.move_to_target_poly(self.valve_x, self.valve_y, self.current_pos.pose.position.z, duration=20.0)
 
         rospy.loginfo("Descending to the valve operation height...")
         target_z = self.valve_z + (self.z_offset_sim if self.is_simulation else self.z_offset_real)
-        self.approach_target_valve(self.valve_x, self.valve_y, target_z)
+        self.move_to_target_poly(self.valve_x, self.valve_y, target_z, duration=10.0)
 
-        rospy.loginfo("Arrived at the valve position. Starting rotation...")
-        self.maintain_position_during_rotation(self.valve_x, self.valve_y, target_z, self.valve_rotation_angle, 40, yaw_tolerance=0.01)
+        rospy.loginfo("Arrived at the valve position. Starting valve rotation...")
+        self.rotate_to_target_poly(self.valve_rotation_angle, duration=10.0, fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=target_z)
 
-        rospy.loginfo("Valve rotation completed. Hovering...")
-        self.maintain_position_during_rotation(self.valve_x, self.valve_y, self.start_z, 0.0, 40, yaw_tolerance=0.05)  
-        self.approach_target_valve(self.valve_x, self.valve_y, self.start_z)  
+        rospy.loginfo("Valve rotation completed. Hovering at start altitude...")
+        self.move_to_target_poly(self.valve_x, self.valve_y, self.start_z, duration=10.0)
+        self.rotate_to_target_poly(0.0, duration=5.0, fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=self.start_z)
 
-        rospy.loginfo(" Returning to start position...")
-        self.approach_target_valve(self.start_x, self.start_y, self.start_z)
+        rospy.loginfo("Returning to start position...")
+        self.move_to_target_poly(self.start_x, self.start_y, self.start_z, duration=10.0)
 
         if self.pos_check():
-            rospy.loginfo("Returned to start position.")
+            rospy.loginfo("Returned to start position successfully.")
             return 'succeeded'
         else:
             rospy.logwarn("Failed to return to start position.")

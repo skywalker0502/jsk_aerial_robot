@@ -88,6 +88,7 @@ class MoveAndRotateValveState(smach.State):
         self.wait_for_initialization(timeout=10)
         self.z_offset_real = 0.21
         self.z_offset_sim = 0.23
+        self.yaw_offset = 0
         self.valve_rotation_angle = math.pi / 2.0  
 
     def beetle_2_callback(self, msg):
@@ -228,13 +229,13 @@ class MoveAndRotateValveState(smach.State):
             pos_cmd.target_pos_y = fixed_y
             pos_cmd.pos_z_nav_mode = FlightNav.POS_MODE
             pos_cmd.target_pos_z = fixed_z
-            pos_cmd.yaw_nav_mode = FlightNav.POS_MODE
+            pos_cmd.yaw_nav_mode = FlightNav.POS_MODE #POS_MODE
             pos_cmd.target_yaw = yaw_val
+            # pos_cmd.target_omega_z = 0.15
             self.pos_pub.publish(pos_cmd)
             rate.sleep()
         rospy.loginfo("Rotation complete, reached target yaw.")
-
-
+        time.sleep(2)
 
     def execute(self, userdata):
         if not self.pos_initialization:
@@ -254,7 +255,7 @@ class MoveAndRotateValveState(smach.State):
         self.move_to_target_poly(self.valve_x, self.valve_y, target_z, duration=10.0)
 
         rospy.loginfo("Arrived at the valve position. Starting valve rotation...")
-        self.rotate_to_target_poly(self.valve_rotation_angle, duration=10.0, fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=target_z)
+        self.rotate_to_target_poly(self.valve_rotation_angle+self.yaw_offset, duration=10.0, fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=target_z)
 
         rospy.loginfo("Valve rotation completed. Hovering at start altitude...")
         self.move_to_target_poly(self.valve_x, self.valve_y, self.start_z, duration=10.0)

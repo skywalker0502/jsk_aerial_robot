@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-
 import rospy
 import smach
 import smach_ros
 import time
+import math
+import threading
+import numpy as np
 from aerial_robot_msgs.msg import FlightNav
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
-import threading
 from tf.transformations import euler_from_quaternion
-import math
-import numpy as np
+from beetle.assembly_api import AssembleDemo
+from beetle.disassembly_api import DisassembleDemo
 
 class PolynomialTrajectory:
     def __init__(self, duration):
@@ -63,6 +64,130 @@ class PolynomialTrajectory:
                 np.dot(self.coeffs_z, T)
             )
 
+def execute_poly_motion_pose_async(pub, start, target, avg_speed, rate_hz=20, delay_after=0):
+
+    def motion():
+        distance = math.sqrt((target[0]-start[0])**2 +
+                             (target[1]-start[1])**2 +
+                             (target[2]-start[2])**2)
+        if avg_speed <= 0:
+            speed = 0.1
+        else:
+            speed = avg_speed
+        duration = distance / speed
+        rospy.loginfo("Executing polynomial motion (PoseStamped) asynchronously: from {} to {} over {:.2f} s".format(start, target, duration))
+        traj = PolynomialTrajectory(duration)
+        traj.generate_trajectory(start, target)
+        rate_obj = rospy.Rate(rate_hz)
+        while not rospy.is_shutdown():
+            pt = traj.evaluate()
+            if pt is None:
+                break
+            msg = PoseStamped()
+            msg.pose.position.x = pt[0]
+            msg.pose.position.y = pt[1]
+            msg.pose.position.z = pt[2]
+            pub.publish(msg)
+            rate_obj.sleep()
+        if delay_after > 0:
+            time.sleep(delay_after)
+    t = threading.Thread(target=motion)
+    t.start()
+    return t
+
+def execute_poly_motion_nav(pub, start, target, avg_speed, rate_hz=20, delay_after=0):
+    distance = math.sqrt((target[0]-start[0])**2 +
+                         (target[1]-start[1])**2 +
+                         (target[2]-start[2])**2)
+    if avg_speed <= 0:
+        avg_speed = 0.1
+    duration = distance / avg_speed
+    rospy.loginfo("Executing polynomial motion (FlightNav): from {} to {} over {:.2f} s".format(start, target, duration))
+    traj = PolynomialTrajectory(duration)
+    traj.generate_trajectory(start, target)
+    rate_obj = rospy.Rate(rate_hz)
+    while not rospy.is_shutdown():
+        pt = traj.evaluate()
+        if pt is None:
+            break
+        msg = FlightNav()
+        msg.target = 1
+        msg.pos_xy_nav_mode = FlightNav.POS_MODE
+        msg.target_pos_x = pt[0]
+        msg.target_pos_y = pt[1]
+        msg.pos_z_nav_mode = FlightNav.POS_MODE
+        msg.target_pos_z = pt[2]
+        pub.publish(msg)
+        rate_obj.sleep()
+    if delay_after > 0:
+        time.sleep(delay_after)
+
+class SeparatedMoveToGateState(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded'])
+        self.beetle1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
+        self.beetle2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
+        self.maze_entrance_x = 7.0
+        self.start_beetle1 = [0.0, 0.75, 1.0]
+        self.start_beetle2 = [0.0, -0.75, 1.0]
+        self.avg_speed = 0.2  
+    def execute(self, userdata):
+        rospy.loginfo("Separated: Moving to maze entrance using asynchronous polynomial trajectories...")
+        target = [self.maze_entrance_x - 2.1, 0.0, 1.0]
+        target_beetle1 = [target[0], 0.75, target[2]]
+        target_beetle2 = [target[0], -0.75, target[2]]
+        t1 = execute_poly_motion_pose_async(self.beetle1_pub, self.start_beetle1, target_beetle1, self.avg_speed)
+        t2 = execute_poly_motion_pose_async(self.beetle2_pub, self.start_beetle2, target_beetle2, self.avg_speed)
+        t1.join()
+        t2.join()
+        rospy.loginfo("Separated: Reached maze entrance.")
+        return 'succeeded'
+
+class SeparatedMoveToValveState(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded'])
+        self.beetle1_pub = rospy.Publisher("/beetle1/target_pose", PoseStamped, queue_size=1)
+        self.beetle2_pub = rospy.Publisher("/beetle2/target_pose", PoseStamped, queue_size=1)
+        self.valve_sub = rospy.Subscriber("/valve/odom", Odometry, self.valve_callback, queue_size=1)
+        self.valve_pos_x = None
+        self.valve_pos_z = None
+        self.avg_speed = 0.2  
+    def valve_callback(self, msg):
+        self.valve_pos_x = msg.pose.pose.position.x
+        self.valve_pos_z = msg.pose.pose.position.z - 0.17
+    def execute(self, userdata):
+        rospy.loginfo("Separated: Moving near the valve using asynchronous polynomial trajectories...")
+        while self.valve_pos_x is None or self.valve_pos_z is None:
+            rospy.logwarn("Valve position not received yet!")
+            time.sleep(0.1)
+        # 设定目标位置（这里假设期望无人机稍微前进）
+        target_beetle1 = [self.valve_pos_x - 1.1 + 0.5, 0.75, self.valve_pos_z + 0.6]
+        target_beetle2 = [self.valve_pos_x - 1.1 + 0.5, -0.75, self.valve_pos_z + 0.6]
+        # 假设起始位置为当前设定的基本位置
+        start_beetle1 = [self.valve_pos_x - 1.1, 0.75, self.valve_pos_z + 0.6]
+        start_beetle2 = [self.valve_pos_x - 1.1, -0.75, self.valve_pos_z + 0.6]
+        # 同时启动两个运动线程
+        t1 = execute_poly_motion_pose_async(self.beetle1_pub, start_beetle1, target_beetle1, self.avg_speed)
+        t2 = execute_poly_motion_pose_async(self.beetle2_pub, start_beetle2, target_beetle2, self.avg_speed)
+        t1.join()
+        t2.join()
+        rospy.loginfo("Separated: Reached valve vicinity.")
+        return 'succeeded'
+
+class AssembleState(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded', 'failed'])
+        self.assemble_demo = AssembleDemo()
+    def execute(self, userdata):
+        rospy.loginfo("Assembling UAVs...")
+        try:
+            self.assemble_demo.main()
+            time.sleep(1)
+            rospy.loginfo("Assembly succeeded!")
+            return 'succeeded'
+        except rospy.ROSInterruptException:
+            rospy.logerr("Assembly failed.")
+            return 'failed'
 
 class MoveAndRotateValveState(smach.State):
     def __init__(self):
@@ -85,7 +210,7 @@ class MoveAndRotateValveState(smach.State):
             self.pos_valve_sub = rospy.Subscriber("/valve/mocap/pose", PoseStamped, self.valve_callback, queue_size=1)
         self.pos_initialization = False 
         self.wait_for_initialization(timeout=10)
-        self.z_offset_real = 0.47  # 0.21(when use the real valve instead of the valve_fake) 
+        self.z_offset_real = 0.47  
         self.z_offset_sim = 0.23
         self.yaw_offset = 0
         self.valve_rotation_angle_compenstation = 0.06
@@ -115,7 +240,6 @@ class MoveAndRotateValveState(smach.State):
     def wait_for_initialization(self, timeout=10):
         events = [self.beetle_1_received, self.beetle_2_received, self.valve_received]
         all_received = all(event.wait(timeout) for event in events)
-        
         if all_received:
             rospy.loginfo("All positions received, initializing...")
             self.pos_initialize()
@@ -134,7 +258,6 @@ class MoveAndRotateValveState(smach.State):
         self.start_x = (self.pos_beetle_2.pose.position.x + self.pos_beetle_1.pose.position.x) / len(self.module_ids)
         self.start_y = (self.pos_beetle_2.pose.position.y + self.pos_beetle_1.pose.position.y) / len(self.module_ids)
         self.start_z = (self.pos_beetle_2.pose.position.z + self.pos_beetle_1.pose.position.z) / len(self.module_ids)
-        
         if self.is_simulation:
             self.valve_x = self.pos_valve_sim.pose.pose.position.x
             self.valve_y = self.pos_valve_sim.pose.pose.position.y
@@ -143,12 +266,9 @@ class MoveAndRotateValveState(smach.State):
             self.valve_x = self.pos_valve.pose.position.x
             self.valve_y = self.pos_valve.pose.position.y
             self.valve_z = self.pos_valve.pose.position.z
-        
         self.update_current_pos()
-
         rospy.loginfo(f"start position is [{self.start_x}, {self.start_y}, {self.start_z}]")
         rospy.loginfo(f"valve position is [{self.valve_x}, {self.valve_y}, {self.valve_z}]")
-        
         self.pos_initialization = True
     
     def get_uav_yaw(self):
@@ -176,7 +296,6 @@ class MoveAndRotateValveState(smach.State):
     def move_to_target_poly(self, target_x, target_y, target_z, avg_speed=None):
         if avg_speed is None:
             avg_speed = self.avg_speed
-
         self.update_current_pos()
         start_pos = (
             self.current_pos.pose.position.x,
@@ -190,8 +309,7 @@ class MoveAndRotateValveState(smach.State):
         if avg_speed <= 0:
             avg_speed = 0.1
         duration = distance / avg_speed
-
-        rospy.loginfo(f"Moving from {start_pos} to {target_pos} over duration {duration:.2f} seconds (avg_speed = {avg_speed} m/s).")
+        rospy.loginfo(f"Moving from {start_pos} to {target_pos} over duration {duration:.2f} s (avg_speed = {avg_speed} m/s).")
         traj = PolynomialTrajectory(duration)
         traj.generate_trajectory(start_pos, target_pos)
         rate = rospy.Rate(20)
@@ -212,16 +330,13 @@ class MoveAndRotateValveState(smach.State):
         time.sleep(3)
 
     def rotate_to_target_poly(self, target_yaw, avg_yaw_speed=None, fixed_x=None, fixed_y=None, fixed_z=None):
-
         if avg_yaw_speed is None:
             avg_yaw_speed = self.avg_yaw_speed
-
         current_yaw = self.get_uav_yaw()
         yaw_diff = target_yaw - current_yaw
         yaw_diff = (yaw_diff + math.pi) % (2 * math.pi) - math.pi
         duration = abs(yaw_diff) / avg_yaw_speed if avg_yaw_speed > 0 else 0.1
-
-        rospy.loginfo(f"Rotating from yaw {current_yaw:.4f} to {target_yaw:.4f} (diff={yaw_diff:.4f}) over duration {duration:.2f} seconds (avg_yaw_speed = {avg_yaw_speed} rad/s).")
+        rospy.loginfo(f"Rotating from yaw {current_yaw:.4f} to {target_yaw:.4f} (diff={yaw_diff:.4f}) over duration {duration:.2f} s (avg_yaw_speed = {avg_yaw_speed} rad/s).")
         traj = PolynomialTrajectory(duration)
         traj.generate_trajectory(current_yaw, target_yaw)
         rate = rospy.Rate(20)
@@ -253,30 +368,23 @@ class MoveAndRotateValveState(smach.State):
             rospy.logwarn("Positions are not initialized. Aborting mission.")
             return 'failed'
         self.update_current_pos()
-
         rospy.loginfo("Initializing position with yaw 0...")
         self.rotate_to_target_poly(0, avg_yaw_speed=self.avg_yaw_speed,
                                      fixed_x=self.start_x, fixed_y=self.start_y, fixed_z=self.start_z)
-
         rospy.loginfo("Moving horizontally to the valve position...")
         self.move_to_target_poly(self.valve_x, self.valve_y, self.current_pos.pose.position.z, avg_speed=self.avg_speed)
-
         rospy.loginfo("Descending to the valve operation height...")
         target_z = self.valve_z + (self.z_offset_sim if self.is_simulation else self.z_offset_real)
         self.move_to_target_poly(self.valve_x, self.valve_y, target_z, avg_speed=self.avg_speed)
-
         rospy.loginfo("Arrived at the valve position. Starting valve rotation...")
         self.rotate_to_target_poly(self.valve_rotation_angle + self.yaw_offset, avg_yaw_speed=self.avg_valve_rotation_speed,
                                      fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=target_z)
-
         rospy.loginfo("Valve rotation completed. Hovering at start altitude...")
         self.move_to_target_poly(self.valve_x, self.valve_y, self.start_z, avg_speed=self.avg_speed)
         self.rotate_to_target_poly(0.0, avg_yaw_speed=self.avg_yaw_speed,
                                    fixed_x=self.valve_x, fixed_y=self.valve_y, fixed_z=self.start_z)
-
         rospy.loginfo("Returning to start position...")
         self.move_to_target_poly(self.start_x, self.start_y, self.start_z, avg_speed=self.avg_speed)
-
         if self.pos_check():
             rospy.loginfo("Returned to start position successfully.")
             return 'succeeded'
@@ -284,12 +392,33 @@ class MoveAndRotateValveState(smach.State):
             rospy.logwarn("Failed to return to start position.")
             return 'failed'
 
+class AssembledLeaveState(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded'])
+        self.pos_pub = rospy.Publisher("/assembly/uav/nav", FlightNav, queue_size=10)
+        self.exit_target = [25.0, 0.0, 1.0]
+    def execute(self, userdata):
+        rospy.loginfo("Assembled: Leaving valve area using polynomial trajectory...")
+        execute_poly_motion_nav(self.pos_pub, self.exit_target, self.exit_target, avg_speed=0.15, delay_after=10)
+        rospy.loginfo("Assembled: Left valve area.")
+        return 'succeeded'
+
 def main():
-    rospy.init_node('simple_valve_rotation_demo')
+    rospy.init_node('valve_task_state_machine')
     sm = smach.StateMachine(outcomes=['TASK_COMPLETED', 'TASK_FAILED'])
     with sm:
-        smach.StateMachine.add('MOVE_AND_ROTATE_VALVE', MoveAndRotateValveState(),
-                                 transitions={'succeeded': 'TASK_COMPLETED', 'failed': 'TASK_FAILED'})
+        smach.StateMachine.add('SEPARATED_MOVE_GATE', SeparatedMoveToGateState(),
+                                 transitions={'succeeded': 'SEPARATED_MOVE_VALVE'})
+        smach.StateMachine.add('SEPARATED_MOVE_VALVE', SeparatedMoveToValveState(),
+                                 transitions={'succeeded': 'ASSEMBLE'})
+        smach.StateMachine.add('ASSEMBLE', AssembleState(),
+                                 transitions={'succeeded': 'ASSEMBLED_VALVE_TASK',
+                                              'failed': 'TASK_FAILED'})
+        smach.StateMachine.add('ASSEMBLED_VALVE_TASK', MoveAndRotateValveState(),
+                                 transitions={'succeeded': 'ASSEMBLED_LEAVE',
+                                              'failed': 'TASK_FAILED'})
+        smach.StateMachine.add('ASSEMBLED_LEAVE', AssembledLeaveState(),
+                                 transitions={'succeeded': 'TASK_COMPLETED'})
     outcome = sm.execute()
 
 if __name__ == '__main__':

@@ -6,8 +6,8 @@
   <arg name="valve_id" default="85" />
   <arg name="robot_id" default="1" />
   ## valve position in gazebo ##
-  <arg name="valve_x" default="0" />
-  <arg name="valve_y" default="2" />
+  <arg name="valve_x" default="15" />
+  <arg name="valve_y" default="0" />
   <arg name="valve_z" default="0" />
   <arg name="valve_yaw" default="0" />
   <group ns="$(arg robot_ns)">

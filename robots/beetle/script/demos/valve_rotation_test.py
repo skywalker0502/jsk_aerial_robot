@@ -73,7 +73,7 @@ class MoveAndRotateValveState(smach.State):
         self.pos_beetle_1 = PoseStamped()
         self.pos_valve = PoseStamped()
         self.pos_valve_sim = Odometry()
-        self.is_simulation = rospy.get_param("~simulation", True)
+        self.is_simulation = rospy.get_param("~simulation", False)
         self.beetle_1_received = threading.Event()
         self.beetle_2_received = threading.Event()
         self.valve_received = threading.Event()
@@ -86,7 +86,7 @@ class MoveAndRotateValveState(smach.State):
             self.pos_valve_sub = rospy.Subscriber("/valve/mocap/pose", PoseStamped, self.valve_callback, queue_size=1)
         self.pos_initialization = False 
         self.wait_for_initialization(timeout=10)
-        self.z_offset_real = 0.21
+        self.z_offset_real = 0.47#0.21
         self.z_offset_sim = 0.23
         self.yaw_offset = 0
         self.valve_rotation_angle = math.pi / 2.0  

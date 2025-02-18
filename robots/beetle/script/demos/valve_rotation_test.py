@@ -90,7 +90,7 @@ class MoveAndRotateValveState(smach.State):
         self.yaw_offset = 0
         self.valve_rotation_angle_compenstation = 0.06
         self.valve_rotation_angle = math.pi / 2.0  + self.valve_rotation_angle_compenstation
-        self.avg_speed = 0.1       
+        self.avg_speed = 0.15       
         self.avg_yaw_speed = 0.15
         self.avg_valve_rotation_speed = 0.3
 

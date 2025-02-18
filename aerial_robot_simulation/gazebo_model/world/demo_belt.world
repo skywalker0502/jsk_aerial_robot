@@ -102,11 +102,11 @@
       <pose>4 -2 0 0 0 1.5708</pose> 
     </include>
 
-    <include>
+    <!-- <include>
       <uri>model://barrier_with_belt_1</uri>
       <name>barrier_with_belt_1_exit_1</name> 
       <pose>4 0 0 0 0 0</pose> 
-    </include>
+    </include> -->
 
     <include>
       <uri>model://barrier_with_belt_1</uri>
@@ -119,6 +119,10 @@
       <name>barrier_with_belt_1_exit_3</name> 
       <pose>4 -1 0 0 0 0</pose> 
     </include>
+
+    <!-- World plugin: Link attacher -->
+    <plugin name="link_attacher_plugin" filename="libgazebo_ros_link_attacher.so">
+    </plugin>s
 
   </world>
 </sdf>
